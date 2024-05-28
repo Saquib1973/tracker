@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "@radix-ui/themes/styles.css";
+@import "./theme-config.css";
+
+@layer utilities {
+  .nav-link {
+    @apply hover:text-black transition-colors text-gray-500;
+  }
+  .input-box {
+    @apply p-2 rounded-md px-3 border outline-none;
+  }
+}
