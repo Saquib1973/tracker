@@ -1,11 +1,11 @@
 import prisma from "@/prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { NextAuthOptions } from "next-auth";
+import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcrypt";
 
-const authOptions: NextAuthOptions = {
+export const options: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -25,8 +25,6 @@ const authOptions: NextAuthOptions = {
             email: credentials.email,
           },
         });
-
-        // console.log(user);
 
         if (user) {
           if (!user.password) {
@@ -57,5 +55,3 @@ const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
 };
-
-export default authOptions;

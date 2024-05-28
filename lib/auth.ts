@@ -27,7 +27,6 @@ export async function signUp(formData: SignUpFormData) {
       data: {
         email,
         password: hashedPassword,
-        provider: "credentials",
         // Add other user data if needed
       },
     });

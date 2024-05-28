@@ -3,11 +3,12 @@ import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
 import { patchIssueSchema } from "../../validationSchema";
 import { getServerSession } from "next-auth";
-import authOptions from "../auth/authOptions";
+import { options } from "@/app/options";
+
 const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(options);
   if (!session) return new Response(null, { status: 401 });
   const body = await request.json();
   const validation = patchIssueSchema.safeParse(body);

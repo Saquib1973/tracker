@@ -1,35 +1,53 @@
 import prisma from "@/prisma/client";
-import { Issue, Status } from "@prisma/client";
-import { Table } from "@radix-ui/themes";
-import Link from "next/link";
-import IssueStatusBadge from "../components/IssueStatusBadge";
-import IssueTools from "./IssueTools";
+import { Metadata } from "next";
 import Pagination from "../components/Pagination";
 import IssueTable, { IssueQuery } from "./IssueTable";
-import { Metadata } from "next";
+import IssueTools from "./IssueTools";
+import { Suspense } from "react";
 
-export const isValidStatus = (value: any): value is Status => {
-  return Object.values(Status).includes(value);
-};
-
-const IssuesPage = async ({ searchParams }: { searchParams: IssueQuery }) => {
+// Helper function to fetch issues and issue count
+const fetchIssues = async (searchParams: IssueQuery) => {
   const {
     status,
     orderBy = "createdAt",
     orderDirection = "asc",
+    page = "1",
   } = searchParams;
-  const validStatus = status && isValidStatus(status) ? status : undefined;
-  const page = parseInt(searchParams.page) || 1;
+  const currentPage = parseInt(page) || 1;
   const pageSize = 5;
-  const issues = await prisma.issue.findMany({
-    where: validStatus ? { status: validStatus } : {},
-    orderBy: { [orderBy]: orderDirection },
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-  });
-  const issueCount = await prisma.issue.count({
-    where: validStatus ? { status: validStatus } : {},
-  });
+
+  let issues, issueCount;
+  if (status === "CLOSED" || status === "IN_PROGRESS" || status === "OPEN") {
+    issues = await prisma.issue.findMany({
+      where: { status },
+      orderBy: { [orderBy]: orderDirection },
+      skip: (currentPage - 1) * pageSize,
+      take: pageSize,
+    });
+
+    issueCount = await prisma.issue.count({
+      where: { status },
+    });
+  } else {
+    issues = await prisma.issue.findMany({
+      where: {},
+      orderBy: { [orderBy]: orderDirection },
+      skip: (currentPage - 1) * pageSize,
+      take: pageSize,
+    });
+
+    issueCount = await prisma.issue.count({
+      where: {},
+    });
+  }
+
+  return { issues, issueCount, currentPage, pageSize };
+};
+
+const IssuesPage = async ({ searchParams }: { searchParams: IssueQuery }) => {
+  const { issues, issueCount, currentPage, pageSize } = await fetchIssues(
+    searchParams
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -38,7 +56,7 @@ const IssuesPage = async ({ searchParams }: { searchParams: IssueQuery }) => {
       <div className="flex w-full justify-center mt-2">
         <Pagination
           pageSize={pageSize}
-          currentPage={page}
+          currentPage={currentPage}
           itemCount={issueCount}
         />
       </div>
@@ -46,7 +64,13 @@ const IssuesPage = async ({ searchParams }: { searchParams: IssueQuery }) => {
   );
 };
 
-export default IssuesPage;
+const IssuesPageWrapper = ({ searchParams }: { searchParams: IssueQuery }) => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <IssuesPage searchParams={searchParams} />
+  </Suspense>
+);
+
+export default IssuesPageWrapper;
 
 export const metadata: Metadata = {
   title: "Tracker - Issue List",

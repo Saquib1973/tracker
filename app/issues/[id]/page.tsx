@@ -1,4 +1,3 @@
-import authOptions from "@/app/api/auth/authOptions";
 import prisma from "@/prisma/client";
 import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
@@ -8,6 +7,7 @@ import DeleteButton from "./DeleteButton";
 import EditButton from "./EditButton";
 import IssueDetail from "./IssueDetail";
 import UpdateStatus from "./UpdateStatus";
+import { options } from "@/app/options";
 
 interface Params {
   params: { id: string };
@@ -19,7 +19,7 @@ const fetchIssue = cache((issueId: number) =>
 
 const IssueDetailPage = async ({ params }: Params) => {
   console.log("updated");
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(options);
   if (typeof parseInt(params.id) !== "number") notFound();
   const issue = await fetchIssue(parseInt(params.id));
   if (!issue) notFound();
@@ -31,10 +31,10 @@ const IssueDetailPage = async ({ params }: Params) => {
       {session && (
         <div className="relative">
           <div className="flex flex-col gap-3 items-center w-full sticky top-10">
-            <EditButton issueId={issue.id} />
-            <UpdateStatus issueId={issue.id} />
+            <EditButton issueId={issue?.id} />
+            <UpdateStatus issueId={issue?.id} />
             <AssigneeSelect issue={issue} />
-            <DeleteButton issueId={issue.id} />
+            <DeleteButton issueId={issue?.id} />
           </div>
         </div>
       )}
@@ -45,7 +45,7 @@ export const dynamic = "force-dynamic";
 export default IssueDetailPage;
 
 export async function generateMetadata({ params }: Params) {
-  const issue = await fetchIssue(parseInt(params.id));
+  const issue = await fetchIssue(parseInt(params?.id));
   return {
     title: issue?.title,
     description: "Detail of issue" + issue?.id,
